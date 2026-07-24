@@ -94,8 +94,21 @@ def export_quote(quote, items, save_path):
     ws.cell(total_row, 8).value = '=SUM(H{}:H{})'.format(FIRST_ITEM_ROW, last_item_row)
 
     ws.cell(total_row + 1, 1).value = quote.get('plan', '')
-    ws.cell(total_row + 2, 1).value = quote.get('seller', '')
-    ws.cell(total_row + 2, 5).value = quote.get('buyer', '')
+    seller_cell = ws.cell(total_row + 2, 1)
+    buyer_cell = ws.cell(total_row + 2, 5)
+    seller_cell.value = quote.get('seller', '')
+    buyer_cell.value = quote.get('buyer', '')
+
+    from openpyxl.styles import Alignment
+    for c in (seller_cell, buyer_cell):
+        c.alignment = Alignment(horizontal='left', vertical='top', wrap_text=True)
+
+    lines = max(len(str(quote.get('seller', '')).split('\n')),
+                len(str(quote.get('buyer', '')).split('\n')), 1)
+    party_rows = 11
+    per_row = max(14.4, min(60.0, lines * 15.5 / party_rows))
+    for r in range(total_row + 2, total_row + 2 + party_rows):
+        ws.row_dimensions[r].height = per_row
 
     wb.save(save_path)
     return save_path
