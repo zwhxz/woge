@@ -159,7 +159,7 @@ class QuoteEditDialog(QDialog):
 
     def _fix_column_widths(self):
         w = self.table.viewport().width() - 10
-        fixed = {0: 50, 9: 64, 10: 64}
+        fixed = {0: 45, 9: 52, 10: 52}
         wide_cols = [1, 2, 8]
         full_cols = [3, 4, 5, 6, 7]
         avail = max(w - sum(fixed.values()), 400)
@@ -318,6 +318,8 @@ class QuoteEditDialog(QDialog):
                  quote['seller'], quote['buyer'], quote['total'], self.quote_id))
             conn.execute('DELETE FROM quote_item WHERE quote_id=?', (self.quote_id,))
             qid = self.quote_id
+            row = conn.execute('SELECT contract_no FROM quote WHERE id=?', (qid,)).fetchone()
+            contract_no = row['contract_no'] if row else ''
         else:
             cur = conn.execute(
                 'INSERT INTO quote(quote_date,project_name,contract_no,plan,seller,buyer,total)'
@@ -326,12 +328,24 @@ class QuoteEditDialog(QDialog):
                  quote['seller'], quote['buyer'], quote['total']))
             qid = cur.lastrowid
             self.quote_id = qid
+            contract_no = ''
         for it in items:
             conn.execute(
                 'INSERT INTO quote_item(quote_id,seq,name,spec,code,price,unit,qty,total,remark)'
                 ' VALUES(?,?,?,?,?,?,?,?,?,?)',
                 (qid, it['seq'], it['name'], it['spec'], it['code'], it['price'],
                  it['unit'], it['qty'], it['total'], it['remark']))
+            exists = conn.execute(
+                'SELECT 1 FROM material WHERE name=? AND spec=? AND code=? AND unit=?'
+                ' AND price=? AND qty=? AND date=? AND contract_no=?',
+                (it['name'], it['spec'], it['code'], it['unit'], it['price'],
+                 it['qty'], quote['quote_date'], contract_no)).fetchone()
+            if not exists:
+                conn.execute(
+                    'INSERT INTO material(customer,name,spec,code,unit,price,qty,date,contract_no,total)'
+                    ' VALUES(?,?,?,?,?,?,?,?,?,?)',
+                    ('', it['name'], it['spec'], it['code'], it['unit'], it['price'],
+                     it['qty'], quote['quote_date'], contract_no, it['total']))
         conn.commit()
         conn.close()
         if not quiet:

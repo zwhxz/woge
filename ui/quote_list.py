@@ -84,8 +84,18 @@ class QuoteListWidget(QWidget):
     def edit_contract(self, qid, current):
         text, ok = QInputDialog.getText(self, '合同号录入/编辑', '合同号：', text=current or '')
         if ok:
+            text = text.strip()
             conn = get_conn()
-            conn.execute('UPDATE quote SET contract_no=? WHERE id=?', (text.strip(), qid))
+            conn.execute('UPDATE quote SET contract_no=? WHERE id=?', (text, qid))
+            q = conn.execute('SELECT quote_date FROM quote WHERE id=?', (qid,)).fetchone()
+            if q and text:
+                items = conn.execute(
+                    'SELECT name, code FROM quote_item WHERE quote_id=?', (qid,)).fetchall()
+                for it in items:
+                    conn.execute(
+                        "UPDATE material SET contract_no=? WHERE contract_no=''"
+                        ' AND date=? AND name=? AND code=?',
+                        (text, q['quote_date'], it['name'], it['code']))
             conn.commit()
             conn.close()
             self.reload()
