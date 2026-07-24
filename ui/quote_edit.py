@@ -95,9 +95,9 @@ class QuoteEditDialog(QDialog):
         self.table = QTableWidget(0, 11)
         self.table.setHorizontalHeaderLabels(
             ['序号', '名称', '规格', '代码', '单价', '单位', '数量', '总价', '备注', '查询', '删除'])
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.table.verticalHeader().setDefaultSectionSize(40)
         self.table.setMinimumHeight(340)
-        self.table.horizontalHeader().setStretchLastSection(True)
         self.table.itemChanged.connect(self.on_item_changed)
         lay.addWidget(self.table, 3)
 
@@ -151,25 +151,6 @@ class QuoteEditDialog(QDialog):
         if self.table.rowCount() == 0:
             for _ in range(5):
                 self.add_row()
-        self._fix_column_widths()
-
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        self._fix_column_widths()
-
-    def _fix_column_widths(self):
-        w = self.table.viewport().width() - 10
-        fixed = {0: 45, 9: 52, 10: 52}
-        wide_cols = [1, 2, 8]
-        full_cols = [3, 4, 5, 6, 7]
-        avail = max(w - sum(fixed.values()), 400)
-        unit = avail / (len(full_cols) + 2 * len(wide_cols))
-        for c, wd in fixed.items():
-            self.table.setColumnWidth(c, wd)
-        for c in wide_cols:
-            self.table.setColumnWidth(c, int(unit * 2))
-        for c in full_cols:
-            self.table.setColumnWidth(c, int(unit))
 
     def load_quote(self, qid):
         conn = get_conn()
