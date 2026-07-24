@@ -10,20 +10,23 @@ ADMIN_NAME = 'woge'
 
 
 class UserEditDialog(QDialog):
-    def __init__(self, parent=None, name=''):
+    def __init__(self, parent=None, name='', password=''):
         super().__init__(parent)
         self.setWindowTitle('编辑用户' if name else '新增用户')
-        self.setFixedSize(320, 130)
+        self.setFixedSize(340, 170)
         form = QFormLayout(self)
         self.ed_name = QLineEdit(name)
         form.addRow('用户名称', self.ed_name)
+        self.ed_pwd = QLineEdit(password)
+        self.ed_pwd.setPlaceholderText('登录密码')
+        form.addRow('登录密码', self.ed_pwd)
         btns = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         btns.accepted.connect(self.accept)
         btns.rejected.connect(self.reject)
         form.addRow(btns)
 
     def value(self):
-        return self.ed_name.text().strip()
+        return self.ed_name.text().strip(), self.ed_pwd.text()
 
 
 class UserManagerWidget(QWidget):
@@ -77,12 +80,13 @@ class UserManagerWidget(QWidget):
     def add_user(self):
         dlg = UserEditDialog(self)
         if dlg.exec_() == QDialog.Accepted:
-            name = dlg.value()
-            if not name:
+            name, pwd = dlg.value()
+            if not name or not pwd:
+                QMessageBox.warning(self, '提示', '名称和密码不能为空')
                 return
             conn = get_conn()
             try:
-                conn.execute('INSERT INTO users(name) VALUES(?)', (name,))
+                conn.execute('INSERT INTO users(name, password) VALUES(?, ?)', (name, pwd))
                 conn.commit()
             except Exception:
                 QMessageBox.warning(self, '失败', '用户名已存在')
@@ -94,17 +98,20 @@ class UserManagerWidget(QWidget):
         if not sel:
             return
         uid, old_name = sel
+        conn = get_conn()
+        row = conn.execute('SELECT password FROM users WHERE id=?', (uid,)).fetchone()
+        conn.close()
+        dlg = UserEditDialog(self, old_name, row['password'] if row else '')
         if old_name == ADMIN_NAME:
-            QMessageBox.warning(self, '提示', '超级管理员不能修改名称')
-            return
-        dlg = UserEditDialog(self, old_name)
+            dlg.ed_name.setReadOnly(True)
         if dlg.exec_() == QDialog.Accepted:
-            name = dlg.value()
-            if not name:
+            name, pwd = dlg.value()
+            if not name or not pwd:
+                QMessageBox.warning(self, '提示', '名称和密码不能为空')
                 return
             conn = get_conn()
             try:
-                conn.execute('UPDATE users SET name=? WHERE id=?', (name, uid))
+                conn.execute('UPDATE users SET name=?, password=? WHERE id=?', (name, pwd, uid))
                 conn.commit()
             except Exception:
                 QMessageBox.warning(self, '失败', '用户名已存在')

@@ -54,12 +54,14 @@ class LoginDialog(QDialog):
         self.cb_user = QComboBox()
         self.cb_user.setEditable(True)
         self.cb_user.addItems(names)
+        self.cb_user.setCurrentIndex(-1)
+        self.cb_user.lineEdit().setPlaceholderText('请输入用户名')
         self.cb_user.setMinimumHeight(34)
         lay.addWidget(self.cb_user)
 
         self.edit = QLineEdit()
         self.edit.setEchoMode(QLineEdit.Password)
-        self.edit.setPlaceholderText('请输入密钥')
+        self.edit.setPlaceholderText('请输入密码')
         self.edit.setMinimumHeight(34)
         self.edit.returnPressed.connect(self.check)
         lay.addWidget(self.edit)
@@ -84,8 +86,8 @@ class LoginDialog(QDialog):
         if user['disabled']:
             QMessageBox.warning(self, '登录失败', '该用户已被禁用，请联系管理员')
             return
-        if self.edit.text().strip().upper() != self.KEY:
-            QMessageBox.warning(self, '登录失败', '密钥错误，请重新输入')
+        if self.edit.text() != (user['password'] or ''):
+            QMessageBox.warning(self, '登录失败', '密码错误，请重新输入')
             self.edit.clear()
             self.edit.setFocus()
             return

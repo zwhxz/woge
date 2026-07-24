@@ -62,9 +62,14 @@ def init_db():
     c.execute('''CREATE TABLE IF NOT EXISTS users(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT UNIQUE,
+        password TEXT DEFAULT '',
         disabled INTEGER DEFAULT 0,
         is_admin INTEGER DEFAULT 0)''')
+    cols = [r[1] for r in c.execute('PRAGMA table_info(users)').fetchall()]
+    if 'password' not in cols:
+        c.execute("ALTER TABLE users ADD COLUMN password TEXT DEFAULT ''")
+    c.execute("UPDATE users SET password='WOGE' WHERE password IS NULL OR password=''")
     if not c.execute('SELECT 1 FROM users LIMIT 1').fetchone():
-        c.execute("INSERT INTO users(name, disabled, is_admin) VALUES('woge', 0, 1)")
+        c.execute("INSERT INTO users(name, password, disabled, is_admin) VALUES('woge', 'WOGE', 0, 1)")
     conn.commit()
     conn.close()
