@@ -57,6 +57,7 @@ class MainWindow(QMainWindow):
     def __init__(self, username=''):
         super().__init__()
         self.username = username
+        self.logout_requested = False
         self.setWindowTitle(APP_NAME + (' - ' + username if username else ''))
         self.resize(1280, 800)
 
@@ -72,12 +73,24 @@ class MainWindow(QMainWindow):
             self.users_page = UserManagerWidget()
             tabs.addTab(self.users_page, '用户管理')
 
+        corner = QWidget()
+        corner_lay = QHBoxLayout(corner)
+        corner_lay.setContentsMargins(4, 0, 4, 0)
+        corner_lay.setSpacing(6)
         btn_pwd = QPushButton('修改密码')
         btn_pwd.clicked.connect(self.change_password)
-        tabs.setCornerWidget(btn_pwd, Qt.TopRightCorner)
+        btn_logout = QPushButton('退出登录')
+        btn_logout.clicked.connect(self.logout)
+        corner_lay.addWidget(btn_pwd)
+        corner_lay.addWidget(btn_logout)
+        tabs.setCornerWidget(corner, Qt.TopRightCorner)
         lay.addWidget(tabs)
         self.setCentralWidget(central)
 
     def change_password(self):
         dlg = ChangePasswordDialog(self, self.username)
         dlg.exec_()
+
+    def logout(self):
+        self.logout_requested = True
+        self.close()

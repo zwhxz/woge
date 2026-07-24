@@ -42,12 +42,15 @@ def main():
     sys.excepthook = excepthook
     init_db()
     app = SafeApplication(sys.argv)
-    login = LoginDialog()
-    if login.exec_() != LoginDialog.Accepted:
-        return 0
-    win = MainWindow(login.username)
-    win.show()
-    return app.exec_()
+    while True:
+        login = LoginDialog()
+        if login.exec_() != LoginDialog.Accepted:
+            return 0
+        win = MainWindow(login.username)
+        win.show()
+        app.exec_()
+        if not win.logout_requested:
+            return 0
 
 
 if __name__ == '__main__':
