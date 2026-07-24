@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import (QDateEdit, QDialog, QFileDialog, QHBoxLayout,
 
 from db import get_conn
 from export_excel import export_quote
-from utils import fmt_money, normalize_party_info, rmb_upper, to_float
+from utils import extract_customer, fmt_money, normalize_party_info, rmb_upper, to_float
 
 DEFAULT_PROJECT = '圣农食品九厂制冰机维修保养报价'
 DEFAULT_SELLER = ('卖方（盖章）：福建雪人震巽发展有限公司\n'
@@ -154,6 +154,8 @@ class QuoteEditDialog(QDialog):
         if self.table.rowCount() == 0:
             for _ in range(5):
                 self.add_row()
+        self.ed_seller.setPlainText(normalize_party_info(self.ed_seller.toPlainText()))
+        self.ed_buyer.setPlainText(normalize_party_info(self.ed_buyer.toPlainText()))
 
     def load_quote(self, qid):
         conn = get_conn()
@@ -323,16 +325,17 @@ class QuoteEditDialog(QDialog):
                 ' VALUES(?,?,?,?,?,?,?,?,?,?)',
                 (qid, it['seq'], it['name'], it['spec'], it['code'], it['price'],
                  it['unit'], it['qty'], it['total'], it['remark']))
+            customer = extract_customer(quote['buyer'])
             exists = conn.execute(
-                'SELECT 1 FROM material WHERE name=? AND spec=? AND code=? AND unit=?'
+                'SELECT 1 FROM material WHERE customer=? AND name=? AND spec=? AND code=? AND unit=?'
                 ' AND price=? AND qty=? AND date=? AND contract_no=?',
-                (it['name'], it['spec'], it['code'], it['unit'], it['price'],
+                (customer, it['name'], it['spec'], it['code'], it['unit'], it['price'],
                  it['qty'], quote['quote_date'], contract_no)).fetchone()
             if not exists:
                 conn.execute(
                     'INSERT INTO material(customer,name,spec,code,unit,price,qty,date,contract_no,total)'
                     ' VALUES(?,?,?,?,?,?,?,?,?,?)',
-                    ('', it['name'], it['spec'], it['code'], it['unit'], it['price'],
+                    (customer, it['name'], it['spec'], it['code'], it['unit'], it['price'],
                      it['qty'], quote['quote_date'], contract_no, it['total']))
         conn.commit()
         conn.close()
