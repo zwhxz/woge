@@ -70,6 +70,6 @@ def init_db():
         c.execute("ALTER TABLE users ADD COLUMN password TEXT DEFAULT ''")
     c.execute("UPDATE users SET password='WOGE' WHERE password IS NULL OR password=''")
     if not c.execute('SELECT 1 FROM users LIMIT 1').fetchone():
-        c.execute("INSERT INTO users(name, password, disabled, is_admin) VALUES('woge', 'WOGE', 0, 1)")
+        c.execute("INSERT INTO users(name, password, disabled, is_admin) VALUES('woge', 'woge', 0, 1)")
     conn.commit()
     conn.close()
