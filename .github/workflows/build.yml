@@ -1,0 +1,31 @@
+name: build-windows-exe
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pyinstaller
+
+      - name: Build exe
+        run: pyinstaller -w -F -n 窝哥报价系统 --add-data "templates/quote_template.xlsx;templates" main.py
+
+      - name: Prepare release folder
+        run: |
+          mkdir release
+          copy "dist\窝哥报价系统.exe" release\
+          if exist woge.db copy woge.db release\
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: 窝哥报价系统-windows
+          path: release/

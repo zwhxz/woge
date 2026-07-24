@@ -1,0 +1,6 @@
+.venv/
+win_dist/
+__pycache__/
+*.pyc
+error.log
+.DS_Store
