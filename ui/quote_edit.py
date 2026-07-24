@@ -242,6 +242,7 @@ class QuoteEditDialog(QDialog):
             self.table.item(row, 1).setText(s['name'])
             self.table.item(row, 2).setText(s['spec'])
             self.table.item(row, 3).setText(s['code'])
+            self.table.item(row, 4).setText(fmt_money(s['price']).replace(',', ''))
             self.table.item(row, 5).setText(s['unit'])
             self._updating = False
             self.recalc_row(row)
