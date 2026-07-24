@@ -94,10 +94,11 @@ def export_quote(quote, items, save_path):
     ws.cell(total_row, 8).value = '=SUM(H{}:H{})'.format(FIRST_ITEM_ROW, last_item_row)
 
     ws.cell(total_row + 1, 1).value = quote.get('plan', '')
+    from utils import normalize_party_info
     seller_cell = ws.cell(total_row + 2, 1)
     buyer_cell = ws.cell(total_row + 2, 5)
-    seller_cell.value = quote.get('seller', '')
-    buyer_cell.value = quote.get('buyer', '')
+    seller_cell.value = normalize_party_info(quote.get('seller', ''))
+    buyer_cell.value = normalize_party_info(quote.get('buyer', ''))
 
     from openpyxl.styles import Alignment
     for c in (seller_cell, buyer_cell):

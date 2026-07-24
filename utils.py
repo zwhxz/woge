@@ -1,3 +1,16 @@
+import re
+
+_PARTY_KEYS = ('法定代表人', '地址', '开户银行', '帐　　号', '账　　号',
+               '帐号', '账号', '电　　话', '电话', '传    真', '传真')
+_PARTY_RE = re.compile(r'(?<=[^\n])(?=' + '|'.join(_PARTY_KEYS) + ')')
+
+
+def normalize_party_info(text):
+    if not text:
+        return text
+    return _PARTY_RE.sub('\n', text)
+
+
 def rmb_upper(amount):
     try:
         amount = float(amount)

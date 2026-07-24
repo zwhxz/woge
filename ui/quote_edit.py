@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import (QDateEdit, QDialog, QFileDialog, QHBoxLayout,
 
 from db import get_conn
 from export_excel import export_quote
-from utils import fmt_money, rmb_upper, to_float
+from utils import fmt_money, normalize_party_info, rmb_upper, to_float
 
 DEFAULT_PROJECT = '圣农食品九厂制冰机维修保养报价'
 DEFAULT_SELLER = ('卖方（盖章）：福建雪人震巽发展有限公司\n'
@@ -294,8 +294,12 @@ class QuoteEditDialog(QDialog):
         if len(plan) > 300:
             QMessageBox.warning(self, '提示', '方案内容超过300字，已截断')
             plan = plan[:300]
-        seller = '\n'.join(self.ed_seller.toPlainText().split('\n')[:20])
-        buyer = '\n'.join(self.ed_buyer.toPlainText().split('\n')[:20])
+        seller = normalize_party_info(
+            '\n'.join(self.ed_seller.toPlainText().split('\n')[:20]))
+        buyer = normalize_party_info(
+            '\n'.join(self.ed_buyer.toPlainText().split('\n')[:20]))
+        self.ed_seller.setPlainText(seller)
+        self.ed_buyer.setPlainText(buyer)
         return {
             'quote_date': self.dt.date().toString('yyyy-MM-dd'),
             'project_name': self.ed_project.text().strip() or DEFAULT_PROJECT,
