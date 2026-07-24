@@ -20,6 +20,7 @@ jobs:
         run: pyinstaller -w -F -n 窝哥报价系统 --add-data "templates/quote_template.xlsx;templates" main.py
 
       - name: Prepare release folder
+        shell: cmd
         run: |
           mkdir release
           copy "dist\窝哥报价系统.exe" release\
