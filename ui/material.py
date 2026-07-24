@@ -178,13 +178,26 @@ class MaterialWidget(QWidget):
             QMessageBox.information(self, '提示', '文件中没有可导入的数据')
             return
         conn = get_conn()
-        conn.executemany(
-            'INSERT INTO material(customer,name,spec,code,unit,price,qty,date,contract_no,total)'
-            ' VALUES(:customer,:name,:spec,:code,:unit,:price,:qty,:date,:contract_no,:total)',
-            rows)
+        inserted = updated = 0
+        for m in rows:
+            dup = conn.execute(
+                'SELECT id FROM material WHERE customer=? AND name=? AND spec=? AND code=?'
+                ' AND unit=? AND price=? AND qty=? AND date=? AND contract_no=?',
+                (m['customer'], m['name'], m['spec'], m['code'], m['unit'],
+                 m['price'], m['qty'], m['date'], m['contract_no'])).fetchone()
+            if dup:
+                conn.execute('UPDATE material SET total=? WHERE id=?', (m['total'], dup['id']))
+                updated += 1
+            else:
+                conn.execute(
+                    'INSERT INTO material(customer,name,spec,code,unit,price,qty,date,contract_no,total)'
+                    ' VALUES(:customer,:name,:spec,:code,:unit,:price,:qty,:date,:contract_no,:total)',
+                    m)
+                inserted += 1
         conn.commit()
         conn.close()
-        QMessageBox.information(self, '导入完成', '成功导入 {} 条记录'.format(len(rows)))
+        QMessageBox.information(self, '导入完成',
+                                '新增 {} 条，覆盖更新 {} 条'.format(inserted, updated))
         self.reload()
 
     def do_export(self):

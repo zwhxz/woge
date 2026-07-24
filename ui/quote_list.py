@@ -1,8 +1,8 @@
 from PyQt5.QtCore import Qt, QDate
 from PyQt5.QtWidgets import (QComboBox, QDateEdit, QFileDialog, QHBoxLayout,
-                             QHeaderView, QInputDialog, QLabel, QMessageBox,
-                             QPushButton, QTableWidget, QTableWidgetItem,
-                             QVBoxLayout, QWidget)
+                             QHeaderView, QInputDialog, QLabel, QLineEdit,
+                             QMessageBox, QPushButton, QTableWidget,
+                             QTableWidgetItem, QVBoxLayout, QWidget)
 
 from db import get_conn
 from export_excel import export_quote
@@ -23,12 +23,14 @@ class QuoteListWidget(QWidget):
         self.f_to.setDisplayFormat('yyyy-MM-dd')
         self.f_status = QComboBox()
         self.f_status.addItems(['全部', '已成交', '未成交'])
+        self.f_project = QLineEdit()
+        self.f_project.setPlaceholderText('项目名称')
         btn_search = QPushButton('查询')
         btn_search.clicked.connect(self.reload)
         btn_new = QPushButton('新增报价单')
         btn_new.clicked.connect(self.new_quote)
         for w in [QLabel('报价日期'), self.f_from, QLabel('至'), self.f_to,
-                  QLabel('是否成交'), self.f_status, btn_search]:
+                  QLabel('是否成交'), self.f_status, self.f_project, btn_search]:
             bar.addWidget(w)
         bar.addStretch()
         bar.addWidget(btn_new)
@@ -52,6 +54,9 @@ class QuoteListWidget(QWidget):
             sql += " AND contract_no != ''"
         elif st == '未成交':
             sql += " AND contract_no = ''"
+        if self.f_project.text().strip():
+            sql += ' AND project_name LIKE ?'
+            args.append('%' + self.f_project.text().strip() + '%')
         sql += ' ORDER BY quote_date DESC, id DESC'
         conn = get_conn()
         rows = conn.execute(sql, args).fetchall()
@@ -70,13 +75,15 @@ class QuoteListWidget(QWidget):
             h.setContentsMargins(2, 2, 2, 2)
             b_contract = QPushButton('合同号录入/编辑')
             b_contract.clicked.connect(lambda _, q=qid, c=r['contract_no']: self.edit_contract(q, c))
+            b_copy = QPushButton('复制新增')
+            b_copy.clicked.connect(lambda _, q=qid: self.copy_quote(q))
             b_edit = QPushButton('编辑')
             b_edit.clicked.connect(lambda _, q=qid: self.edit_quote(q))
             b_export = QPushButton('导出')
             b_export.clicked.connect(lambda _, q=qid: self.export_quote(q))
             b_del = QPushButton('删除')
             b_del.clicked.connect(lambda _, q=qid: self.delete_quote(q))
-            for b in [b_contract, b_edit, b_export, b_del]:
+            for b in [b_contract, b_copy, b_edit, b_export, b_del]:
                 h.addWidget(b)
             self.table.setCellWidget(i, 5, cell)
             self.table.setRowHeight(i, 34)
@@ -109,6 +116,12 @@ class QuoteListWidget(QWidget):
     def edit_quote(self, qid):
         from ui.quote_edit import QuoteEditDialog
         dlg = QuoteEditDialog(self, quote_id=qid)
+        if dlg.exec_():
+            self.reload()
+
+    def copy_quote(self, qid):
+        from ui.quote_edit import QuoteEditDialog
+        dlg = QuoteEditDialog(self, copy_from=qid)
         if dlg.exec_():
             self.reload()
 

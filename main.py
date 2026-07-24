@@ -45,7 +45,7 @@ def main():
     login = LoginDialog()
     if login.exec_() != LoginDialog.Accepted:
         return 0
-    win = MainWindow()
+    win = MainWindow(login.username)
     win.show()
     return app.exec_()
 

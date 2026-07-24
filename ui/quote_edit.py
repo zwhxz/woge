@@ -73,7 +73,7 @@ class HistoryDialog(QDialog):
 
 
 class QuoteEditDialog(QDialog):
-    def __init__(self, parent=None, quote_id=None):
+    def __init__(self, parent=None, quote_id=None, copy_from=None):
         super().__init__(parent)
         self.quote_id = quote_id
         self.setWindowTitle('编辑报价单' if quote_id else '新增报价单')
@@ -148,6 +148,9 @@ class QuoteEditDialog(QDialog):
 
         if quote_id:
             self.load_quote(quote_id)
+        elif copy_from:
+            self.load_quote(copy_from)
+            self.dt.setDate(QDate.currentDate())
         if self.table.rowCount() == 0:
             for _ in range(5):
                 self.add_row()

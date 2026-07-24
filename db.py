@@ -59,5 +59,12 @@ def init_db():
     c.execute('CREATE INDEX IF NOT EXISTS idx_material_name ON material(name)')
     c.execute('CREATE INDEX IF NOT EXISTS idx_material_contract ON material(contract_no)')
     c.execute('CREATE INDEX IF NOT EXISTS idx_item_quote ON quote_item(quote_id)')
+    c.execute('''CREATE TABLE IF NOT EXISTS users(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT UNIQUE,
+        disabled INTEGER DEFAULT 0,
+        is_admin INTEGER DEFAULT 0)''')
+    if not c.execute('SELECT 1 FROM users LIMIT 1').fetchone():
+        c.execute("INSERT INTO users(name, disabled, is_admin) VALUES('woge', 0, 1)")
     conn.commit()
     conn.close()
