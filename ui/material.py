@@ -77,6 +77,8 @@ class MaterialWidget(QWidget):
         btn_sel_all = QPushButton('全选')
         btn_sel_all.setCheckable(True)
         btn_sel_all.toggled.connect(self.toggle_select_all)
+        btn_export = QPushButton('批量导出')
+        btn_export.clicked.connect(self.do_export)
         btn_del = QPushButton('批量删除')
         btn_del.clicked.connect(self.batch_delete)
         btn_add = QPushButton('新增')
@@ -84,7 +86,7 @@ class MaterialWidget(QWidget):
         btn_edit = QPushButton('编辑')
         btn_edit.clicked.connect(self.edit_selected)
         self.lbl_count = QLabel('')
-        for w in [btn_import, btn_sel_all, btn_del, btn_add, btn_edit]:
+        for w in [btn_import, btn_export, btn_sel_all, btn_del, btn_add, btn_edit]:
             bar2.addWidget(w)
         bar2.addStretch()
         bar2.addWidget(self.lbl_count)
@@ -107,7 +109,7 @@ class MaterialWidget(QWidget):
         self.f_date_on.setChecked(False)
         self.reload()
 
-    def reload(self):
+    def _query_rows(self):
         sql = 'SELECT * FROM material WHERE 1=1'
         args = []
         if self.f_contract.text().strip():
@@ -127,6 +129,10 @@ class MaterialWidget(QWidget):
         conn = get_conn()
         rows = conn.execute(sql, args).fetchall()
         conn.close()
+        return rows
+
+    def reload(self):
+        rows = self._query_rows()
         self.table.setRowCount(0)
         self.table.setRowCount(len(rows))
         for i, r in enumerate(rows):
@@ -180,6 +186,35 @@ class MaterialWidget(QWidget):
         conn.close()
         QMessageBox.information(self, '导入完成', '成功导入 {} 条记录'.format(len(rows)))
         self.reload()
+
+    def do_export(self):
+        rows = self._query_rows()
+        if not rows:
+            QMessageBox.information(self, '提示', '当前没有可导出的数据')
+            return
+        path, _ = QFileDialog.getSaveFileName(
+            self, '导出物料', '物料导出.xlsx', 'Excel (*.xlsx)')
+        if not path:
+            return
+        import openpyxl
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.append(['签单日期', '销售合同号', '客户', '物料名称', '规格型号',
+                   '物料编码', '销售单位', '销售数量', '单价',
+                   '价税合计', '价税合计（本位币）', '销售员', '备注'])
+        for r in rows:
+            total = r['total'] or round((r['price'] or 0) * (r['qty'] or 0), 2)
+            ws.append([r['date'], r['contract_no'], r['customer'], r['name'],
+                       r['spec'], r['code'], r['unit'], r['qty'], r['price'],
+                       total, total, '', ''])
+        for col, w in zip('ABCDEFGHIJKLM', [12, 16, 28, 24, 24, 12, 8, 10, 12, 14, 18, 10, 10]):
+            ws.column_dimensions[col].width = w
+        try:
+            wb.save(path)
+        except Exception as e:
+            QMessageBox.critical(self, '导出失败', str(e))
+            return
+        QMessageBox.information(self, '完成', '已导出 {} 条：\n{}'.format(len(rows), path))
 
     def batch_delete(self):
         ids = self._selected_ids()
