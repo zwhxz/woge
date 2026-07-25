@@ -1,3 +1,4 @@
+import json
 import os
 import sqlite3
 import sys
@@ -10,10 +11,28 @@ def data_dir():
 
 
 DB_PATH = os.path.join(data_dir(), 'woge.db')
+CONFIG_PATH = os.path.join(data_dir(), 'config.json')
+
+
+def get_db_path():
+    try:
+        with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
+            cfg = json.load(f)
+        p = (cfg.get('db_path') or '').strip()
+        if p:
+            return p
+    except (OSError, ValueError):
+        pass
+    return DB_PATH
+
+
+def set_db_path(path):
+    with open(CONFIG_PATH, 'w', encoding='utf-8') as f:
+        json.dump({'db_path': path or ''}, f, ensure_ascii=False)
 
 
 def get_conn():
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(get_db_path(), timeout=30)
     conn.row_factory = sqlite3.Row
     return conn
 

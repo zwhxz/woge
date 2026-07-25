@@ -2,8 +2,10 @@ import os
 import sys
 import traceback
 
+from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QApplication, QMessageBox
 
+from backup import backup_if_needed
 from db import data_dir, init_db
 from ui.login import LoginDialog
 from ui.main_window import MainWindow
@@ -42,6 +44,11 @@ def main():
     sys.excepthook = excepthook
     init_db()
     app = SafeApplication(sys.argv)
+    backup_if_needed()
+    timer = QTimer()
+    timer.setInterval(30 * 60 * 1000)
+    timer.timeout.connect(backup_if_needed)
+    timer.start()
     while True:
         login = LoginDialog()
         if login.exec_() != LoginDialog.Accepted:

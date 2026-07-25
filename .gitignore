@@ -4,3 +4,5 @@ __pycache__/
 *.pyc
 error.log
 .DS_Store
+config.json
+backups/
