@@ -108,6 +108,9 @@ class MainWindow(QMainWindow):
         if username == 'woge':
             self.users_page = UserManagerWidget()
             tabs.addTab(self.users_page, '用户管理')
+            from ui.license_admin import LicenseAdminWidget
+            self.license_page = LicenseAdminWidget()
+            tabs.addTab(self.license_page, '授权管理')
 
         corner = QWidget()
         corner_lay = QHBoxLayout(corner)

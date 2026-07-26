@@ -90,5 +90,12 @@ def init_db():
     c.execute("UPDATE users SET password='WOGE' WHERE password IS NULL OR password=''")
     if not c.execute('SELECT 1 FROM users LIMIT 1').fetchone():
         c.execute("INSERT INTO users(name, password, disabled, is_admin) VALUES('woge', 'woge', 0, 1)")
+    c.execute('''CREATE TABLE IF NOT EXISTS license(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        customer TEXT DEFAULT '',
+        machine_code TEXT DEFAULT '',
+        serial TEXT DEFAULT '',
+        status TEXT DEFAULT '有效',
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP)''')
     conn.commit()
     conn.close()
