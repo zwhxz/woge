@@ -7,8 +7,6 @@ from PyQt5.QtWidgets import QApplication, QMessageBox
 
 from backup import backup_if_needed
 from db import data_dir, init_db
-from license import is_activated
-from ui.activate import ActivateDialog
 from ui.login import LoginDialog
 from ui.main_window import MainWindow
 
@@ -46,10 +44,6 @@ def main():
     sys.excepthook = excepthook
     init_db()
     app = SafeApplication(sys.argv)
-    if not is_activated():
-        dlg = ActivateDialog()
-        if dlg.exec_() != ActivateDialog.Accepted:
-            return 0
     backup_if_needed()
     timer = QTimer()
     timer.setInterval(30 * 60 * 1000)
