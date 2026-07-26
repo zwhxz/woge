@@ -67,8 +67,7 @@ class LoginDialog(QDialog):
         lay.addWidget(self.edit)
 
         from PyQt5.QtWidgets import QCheckBox
-        self.cb_admin = QCheckBox('超管登录（woge 免密码直接登录）')
-        self.cb_admin.toggled.connect(self._toggle_admin)
+        self.cb_admin = QCheckBox('超管登录')
         lay.addWidget(self.cb_admin)
 
         btn = QPushButton('登  录')
@@ -76,13 +75,6 @@ class LoginDialog(QDialog):
         btn.setMinimumHeight(38)
         btn.clicked.connect(self.check)
         lay.addWidget(btn)
-
-    def _toggle_admin(self, checked):
-        if checked:
-            self.cb_user.setCurrentText('woge')
-            self.edit.setEnabled(False)
-        else:
-            self.edit.setEnabled(True)
 
     def check(self):
         name = self.cb_user.currentText().strip()
@@ -98,9 +90,8 @@ class LoginDialog(QDialog):
         if user['disabled']:
             QMessageBox.warning(self, '登录失败', '该用户已被禁用，请联系管理员')
             return
-        if self.cb_admin.isChecked() and name == 'woge' and user['is_admin']:
-            self.username = name
-            self.accept()
+        if self.cb_admin.isChecked() and not user['is_admin']:
+            QMessageBox.warning(self, '登录失败', '该用户不是超管账号')
             return
         if self.edit.text() != (user['password'] or ''):
             QMessageBox.warning(self, '登录失败', '密码错误，请重新输入')
