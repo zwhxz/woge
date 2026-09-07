@@ -10,8 +10,9 @@ from utils import fmt_money
 
 
 class QuoteListWidget(QWidget):
-    def __init__(self):
+    def __init__(self, username=''):
         super().__init__()
+        self.username = username
         lay = QVBoxLayout(self)
 
         bar = QHBoxLayout()
@@ -36,9 +37,9 @@ class QuoteListWidget(QWidget):
         bar.addWidget(btn_new)
         lay.addLayout(bar)
 
-        self.table = QTableWidget(0, 6)
+        self.table = QTableWidget(0, 7)
         self.table.setHorizontalHeaderLabels(
-            ['报价日期', '项目名称', '报价合计', '合同号', '是否成交', '操作'])
+            ['报价日期', '项目名称', '报价合计', '合同号', '报价账号', '是否成交', '操作'])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
         self.table.setEditTriggers(QTableWidget.NoEditTriggers)
@@ -68,6 +69,7 @@ class QuoteListWidget(QWidget):
             done = bool(r['contract_no'])
             for j, v in enumerate([r['quote_date'], r['project_name'],
                                    fmt_money(r['total']), r['contract_no'],
+                                   r['created_by'] if 'created_by' in r.keys() else '',
                                    '已成交' if done else '未成交']):
                 self.table.setItem(i, j, QTableWidgetItem(str(v)))
             cell = QWidget()
@@ -85,7 +87,7 @@ class QuoteListWidget(QWidget):
             b_del.clicked.connect(lambda _, q=qid: self.delete_quote(q))
             for b in [b_contract, b_copy, b_edit, b_export, b_del]:
                 h.addWidget(b)
-            self.table.setCellWidget(i, 5, cell)
+            self.table.setCellWidget(i, 6, cell)
             self.table.setRowHeight(i, 34)
 
     def edit_contract(self, qid, current):
@@ -109,19 +111,19 @@ class QuoteListWidget(QWidget):
 
     def new_quote(self):
         from ui.quote_edit import QuoteEditDialog
-        dlg = QuoteEditDialog(self)
+        dlg = QuoteEditDialog(self, username=self.username)
         if dlg.exec_():
             self.reload()
 
     def edit_quote(self, qid):
         from ui.quote_edit import QuoteEditDialog
-        dlg = QuoteEditDialog(self, quote_id=qid)
+        dlg = QuoteEditDialog(self, quote_id=qid, username=self.username)
         if dlg.exec_():
             self.reload()
 
     def copy_quote(self, qid):
         from ui.quote_edit import QuoteEditDialog
-        dlg = QuoteEditDialog(self, copy_from=qid)
+        dlg = QuoteEditDialog(self, copy_from=qid, username=self.username)
         if dlg.exec_():
             self.reload()
 

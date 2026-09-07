@@ -102,7 +102,7 @@ class MainWindow(QMainWindow):
         lay.setContentsMargins(0, 0, 0, 0)
         tabs = QTabWidget()
         self.material_page = MaterialWidget()
-        self.quote_page = QuoteListWidget()
+        self.quote_page = QuoteListWidget(username)
         tabs.addTab(self.quote_page, '报价单管理')
         tabs.addTab(self.material_page, '物料库管理')
         if username == 'woge':

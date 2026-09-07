@@ -62,6 +62,9 @@ def init_db():
         buyer TEXT DEFAULT '',
         total REAL DEFAULT 0,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP)''')
+    cols = [r[1] for r in c.execute('PRAGMA table_info(quote)').fetchall()]
+    if 'created_by' not in cols:
+        c.execute("ALTER TABLE quote ADD COLUMN created_by TEXT DEFAULT ''")
     c.execute('''CREATE TABLE IF NOT EXISTS quote_item(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         quote_id INTEGER,

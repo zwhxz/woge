@@ -73,9 +73,10 @@ class HistoryDialog(QDialog):
 
 
 class QuoteEditDialog(QDialog):
-    def __init__(self, parent=None, quote_id=None, copy_from=None):
+    def __init__(self, parent=None, quote_id=None, copy_from=None, username=''):
         super().__init__(parent)
         self.quote_id = quote_id
+        self.username = username
         self.setWindowTitle('编辑报价单' if quote_id else '新增报价单')
         self.resize(1250, 850)
         self._updating = False
@@ -312,10 +313,10 @@ class QuoteEditDialog(QDialog):
             contract_no = row['contract_no'] if row else ''
         else:
             cur = conn.execute(
-                'INSERT INTO quote(quote_date,project_name,contract_no,plan,seller,buyer,total)'
-                " VALUES(?,?,?,?,?,?,?)",
+                'INSERT INTO quote(quote_date,project_name,contract_no,plan,seller,buyer,total,created_by)'
+                " VALUES(?,?,?,?,?,?,?,?)",
                 (quote['quote_date'], quote['project_name'], '', quote['plan'],
-                 quote['seller'], quote['buyer'], quote['total']))
+                 quote['seller'], quote['buyer'], quote['total'], self.username))
             qid = cur.lastrowid
             self.quote_id = qid
             contract_no = ''
